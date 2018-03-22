@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Development.CI.Ofborg.Stats where
 
-import Data.Map (Map)
+import Data.HashMap.Strict (HashMap)
 import Data.Text (Text)
 
 -- | Statistics about messages in a queue.
@@ -25,7 +25,7 @@ data QueueStats = QueueStats
 -- | Statistics about all queues in a running ofborg instance
 data AllQueueStats = AllQueueStats
   { -- | Statistics about the build queues, keyed by name
-    allQueueStats_buildQueues :: !(Map Text QueueStats)
+    allQueueStats_buildQueues :: !(HashMap Text QueueStats)
   , -- | Statistics about the evaluator queue
     allQueueStats_evaluator :: !QueueStats
   }
