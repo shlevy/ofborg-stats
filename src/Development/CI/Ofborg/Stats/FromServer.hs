@@ -1,6 +1,8 @@
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RecordWildCards #-}
 module Development.CI.Ofborg.Stats.FromServer where
 
+import Control.Lens.Operators ((<&>))
 import Data.Aeson (Value)
 import Data.Aeson.Internal (iparse, JSONPath, IResult)
 import Data.Aeson.Parser.Internal (eitherDecodeStrictWith, jsonEOF')
@@ -12,9 +14,8 @@ import Development.CI.Ofborg.Stats.FromJSON
 -- | Effects needed to fetch from the server.
 --
 -- 'url': The type of URLs.
--- 'res': The type of HTTP responses.
 -- 'm': The monad we're operating in.
-data FetchEffects url res m = FetchEffects
+data FetchEffects url m = forall res . FetchEffects
   { -- | GET the 'url'
     gET :: !(url -> m res)
   , -- | The HTTP status code of a response.
@@ -31,7 +32,7 @@ data FetchError
 
 -- | Fetch all of the queue stats from a given URL.
 fetchFromServer :: (Functor m)
-                => FetchEffects url res m
+                => FetchEffects url m
                 -> url
                 -> m (Either FetchError AllQueueStats)
 fetchFromServer (FetchEffects {..}) url = gET url <&> \r ->
@@ -39,10 +40,6 @@ fetchFromServer (FetchEffects {..}) url = gET url <&> \r ->
       200 -> parse $ resBody r
       n -> Left $ HTTPFailure n
   where
-    -- Avoid lens just for this...
-    (<&>) :: Functor f => f a -> (a -> b) -> f b
-    (<&>) = flip fmap
-
     iparser :: Value -> IResult AllQueueStats
     iparser = iparse parseAllQueueStatsFromJSON
 
